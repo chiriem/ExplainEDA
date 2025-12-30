@@ -11,8 +11,9 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📊 고객 데이터 자동 EDA 해설 리포트")
+st.title("고객 데이터 자동 EDA 해설 리포트")
 st.caption("통계 계산은 Python, 해석은 LLM이 담당합니다.")
+st.caption("수치형, 범주형 컬럼들은 각각 최대 3개씩만 분석합니다.")
 
 # ==================================================
 # 2. CSV 업로드
@@ -20,7 +21,7 @@ st.caption("통계 계산은 Python, 해석은 LLM이 담당합니다.")
 uploaded_file = st.file_uploader("CSV 파일 업로드", type=["csv"])
 
 if uploaded_file is None:
-    st.info("Kaggle Customer 데이터 CSV 파일을 업로드하세요.")
+    st.info("데이터 CSV 파일을 업로드하세요.")
     st.stop()
 
 df = pd.read_csv(uploaded_file)
@@ -34,15 +35,27 @@ for col in df.columns:
 
 if id_candidates:
     df = df.drop(columns=id_candidates)
-    st.warning(f"🆔 PK(ID)로 추정되는 컬럼을 자동으로 제거했습니다: {', '.join(id_candidates)}")
+    st.warning(f"PK(ID)로 추정되는 컬럼을 자동으로 제거했습니다. 대상 컬럼 : {', '.join(id_candidates)}")
 
-df = df.dropna(axis=0)
 st.success("데이터 로드 완료")
+
+st.divider()
+
+st.subheader("결측치 처리")
+
+
+if st.button("결측치 제거"):
+    df = df.dropna(axis=0)
+    st.success("결측치 제거 완료")
+
+st.divider()
 
 # ==================================================
 # 3. 데이터 개요
 # ==================================================
-st.subheader("📌 데이터 개요")
+st.subheader("데이터 개요")
+
+
 st.write(f"- 행 수: {df.shape[0]}")
 st.write(f"- 열 수: {df.shape[1]}")
 st.dataframe(df.head())
@@ -58,7 +71,7 @@ categorical_cols = df.select_dtypes(exclude=np.number).columns.tolist()
 # ==================================================
 numeric_report = "Numeric Columns Analysis:\n"
 
-for col in numeric_cols:
+for col in numeric_cols[:3]:
     c = df[col]
     numeric_report += f"""
 - Column: {col}
@@ -74,7 +87,7 @@ for col in numeric_cols:
 # ==================================================
 categorical_report = "Categorical Columns Analysis:\n"
 
-for col in categorical_cols:
+for col in categorical_cols[:3]:
     vc = df[col].value_counts(dropna=False)
     ratio = (vc / len(df)) * 100
 
@@ -147,13 +160,16 @@ def generate_eda_report(prompt_text):
 # ==================================================
 # 9. LLM 입력 내용 미리보기
 # ==================================================
-with st.expander("📄 LLM에 전달되는 EDA 요약 텍스트"):
+with st.expander("LLM에 전달되는 EDA 요약 텍스트"):
     st.text(final_eda_text)
 
 # ==================================================
 # 10. 리포트 생성 버튼
 # ==================================================
-st.subheader("📘 통합 EDA 해설 리포트")
+
+st.divider()
+
+st.subheader("EDA 해설 리포트")
 
 if "final_report" not in st.session_state:
     st.session_state.final_report = None
@@ -168,14 +184,24 @@ if st.button("전체 EDA 리포트 생성"):
 # ==================================================
 # 11. 리포트 출력
 # ==================================================
-if st.session_state.final_report:
-    st.markdown("### 📝 자동 생성 분석 리포트")
-    st.write(st.session_state.final_report)
+# if st.session_state.final_report:
+#     st.text_area(
+#         "자동 생성 분석 리포트",
+#         st.session_state.final_report,
+#         height=500
+#     )
+with st.container(height=500):
+    if st.session_state.final_report:
+        st.markdown(st.session_state.final_report)
+    else:
+        st.markdown("EDA 리포트 공간입니다.")
+
+
 
 # ==================================================
 # 12. 분석 기준 명시
 # ==================================================
-with st.expander("📌 리포트 작성 기준"):
+with st.expander("리포트 작성 기준"):
     st.markdown("""
 - 본 리포트는 자동 생성된 EDA 해설입니다.
 - 모든 통계 계산은 Python에서 수행됩니다.
