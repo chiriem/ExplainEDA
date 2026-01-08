@@ -12,8 +12,14 @@ st.title("고객 데이터 자동 EDA 해설 리포트")
 st.caption("통계 계산은 Python, 해석은 LLM이 담당합니다.")
 st.caption("수치형, 범주형 컬럼들은 각각 최대 3개씩만 분석합니다.")
 
-# CSV 파일 로드
-df = pd.read_csv("data/train.csv")
+# CSV 업로드
+uploaded_file = st.file_uploader("CSV 파일 업로드", type=["csv"])
+
+if uploaded_file is None:
+    st.info("데이터 CSV 파일을 업로드하세요.")
+    st.stop()
+
+df = pd.read_csv(uploaded_file)
 
 # ID/PK 추정 컬럼 자동 제거 로직
 find_pk = []
@@ -27,8 +33,6 @@ if find_pk:
     st.warning(f"PK(ID)로 추정되는 컬럼을 자동으로 제거했습니다. 대상 컬럼 : {', '.join(find_pk)}")
 
 st.success("데이터 로드 완료")
-
-# st.dataframe(df)
 
 st.divider()
 
@@ -47,7 +51,7 @@ st.subheader("데이터 개요")
 
 st.write(f"- 행 수: {df.shape[0]}")
 st.write(f"- 열 수: {df.shape[1]}")
-st.dataframe(df.head(20))
+st.dataframe(df.head())
 
 # 컬럼 유형 분리
 numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
