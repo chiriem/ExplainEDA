@@ -16,7 +16,7 @@ st.caption("수치형, 범주형 컬럼들은 각각 최대 3개씩만 분석합
 uploaded_file = st.file_uploader("CSV 파일 업로드", type=["csv"])
 
 if uploaded_file is None:
-    st.info("데이터 CSV 파일을 업로드하세요. (https://github.com/chiriem/ExplainEDA/tree/main/data 의 csv파일을 다운로드 받아 업로드)")
+    st.info("데이터 CSV 파일을 업로드하세요. (https://github.com/chiriem/ExplainEDA/tree/main/data 의 train.csv파일을 다운로드 받아 업로드)")
     st.stop()
 
 df = pd.read_csv(uploaded_file)
